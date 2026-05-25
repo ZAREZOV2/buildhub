@@ -4,197 +4,9 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
-local CoreGui = game:GetService("CoreGui")
 
--- ==================== LOOTLABS CONFIG ====================
-local LOOTLABS_API_KEY = "8d9ae9c94aac0ab66b61d6983a4217e72da375f4ce0c1f13a083f90731f51429"
-local BUILDHUB_KEY = "BuildHub2026"
-local KEY_SYSTEM_ENABLED = true
-local KEY_SYSTEM_URL = "https://jnkie.com/BuildHub" -- jnkie.com link (LootLabs monetized)
-
-local function createLootlabsLink(title, url, tierId, tasks, theme)
-	local ok, res = pcall(function()
-		return game:HttpGet(
-			"https://creators.lootlabs.gg/api/public/content_locker?api_token="
-			.. LOOTLABS_API_KEY
-			.. "&title=" .. HttpService:UrlEncode(title)
-			.. "&url=" .. HttpService:UrlEncode(url)
-			.. "&tier_id=" .. tostring(tierId)
-			.. "&number_of_tasks=" .. tostring(tasks)
-			.. "&theme=" .. tostring(theme or 1)
-		)
-	end)
-	if ok then
-		local ok2, data = pcall(function()
-			return HttpService:JSONDecode(res)
-		end)
-		if ok2 and (data.type == "created" or data.type == "fetch") and data.message and data.message.loot_url then
-			return data.message.loot_url
-		end
-	end
-	return nil
-end
-
-local function copyToClipboard(text)
-	pcall(function()
-		if setclipboard then
-			setclipboard(text)
-		elseif toclipboard then
-			toclipboard(text)
-		end
-	end)
-end
-
--- ==================== KEY SYSTEM ====================
-if KEY_SYSTEM_ENABLED then
-	local keyVerified = false
-
-	local keyGui = Instance.new("ScreenGui")
-	keyGui.Name = "BuildHub_KeySystem"
-	keyGui.ResetOnSpawn = false
-	keyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	keyGui.Parent = CoreGui
-
-	local bg = Instance.new("Frame")
-	bg.Size = UDim2.new(1, 0, 1, 0)
-	bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	bg.BackgroundTransparency = 0.5
-	bg.Parent = keyGui
-
-	local main = Instance.new("Frame")
-	main.Size = UDim2.new(0, 420, 0, 290)
-	main.Position = UDim2.new(0.5, -210, 0.5, -145)
-	main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-	main.BorderSizePixel = 0
-	main.Parent = keyGui
-	Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
-	local mainStroke = Instance.new("UIStroke")
-	mainStroke.Thickness = 1
-	mainStroke.Color = Color3.fromRGB(60, 60, 80)
-	mainStroke.Parent = main
-
-	local titleBar = Instance.new("Frame")
-	titleBar.Size = UDim2.new(1, 0, 0, 45)
-	titleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-	titleBar.BorderSizePixel = 0
-	titleBar.Parent = main
-	Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 10)
-
-	local titleLabel = Instance.new("TextLabel")
-	titleLabel.Size = UDim2.new(1, -20, 1, 0)
-	titleLabel.Position = UDim2.new(0, 20, 0, 0)
-	titleLabel.BackgroundTransparency = 1
-	titleLabel.Text = "BuildHub | Key System"
-	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	titleLabel.Font = Enum.Font.GothamBold
-	titleLabel.TextSize = 16
-	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-	titleLabel.Parent = titleBar
-
-	local info = Instance.new("TextLabel")
-	info.Size = UDim2.new(0.9, 0, 0, 40)
-	info.Position = UDim2.new(0.05, 0, 0, 55)
-	info.BackgroundTransparency = 1
-	info.Text = "Visit the link below to get your key:"
-	info.TextColor3 = Color3.fromRGB(180, 180, 200)
-	info.Font = Enum.Font.Gotham
-	info.TextSize = 13
-	info.TextWrapped = true
-	info.Parent = main
-
-	local linkBtn = Instance.new("TextButton")
-	linkBtn.Size = UDim2.new(0.9, 0, 0, 42)
-	linkBtn.Position = UDim2.new(0.05, 0, 0, 100)
-	linkBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-	linkBtn.Text = KEY_SYSTEM_URL
-	linkBtn.TextColor3 = Color3.fromRGB(100, 180, 255)
-	linkBtn.Font = Enum.Font.Gotham
-	linkBtn.TextSize = 12
-	linkBtn.TextWrapped = true
-	linkBtn.BorderSizePixel = 0
-	linkBtn.AutoButtonColor = false
-	linkBtn.Parent = main
-	Instance.new("UICorner", linkBtn).CornerRadius = UDim.new(0, 8)
-
-	local copyHint = Instance.new("TextLabel")
-	copyHint.Size = UDim2.new(0.9, 0, 0, 20)
-	copyHint.Position = UDim2.new(0.05, 0, 0, 144)
-	copyHint.BackgroundTransparency = 1
-	copyHint.Text = "(click to copy to clipboard)"
-	copyHint.TextColor3 = Color3.fromRGB(100, 100, 120)
-	copyHint.Font = Enum.Font.Gotham
-	copyHint.TextSize = 11
-	copyHint.Parent = main
-
-	local keyInput = Instance.new("TextBox")
-	keyInput.Size = UDim2.new(0.9, 0, 0, 38)
-	keyInput.Position = UDim2.new(0.05, 0, 0, 170)
-	keyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-	keyInput.PlaceholderText = "Enter key..."
-	keyInput.Text = ""
-	keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-	keyInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 120)
-	keyInput.Font = Enum.Font.Gotham
-	keyInput.TextSize = 14
-	keyInput.ClearTextOnFocus = false
-	keyInput.BorderSizePixel = 0
-	keyInput.Parent = main
-	Instance.new("UICorner", keyInput).CornerRadius = UDim.new(0, 8)
-
-	local submitBtn = Instance.new("TextButton")
-	submitBtn.Size = UDim2.new(0.9, 0, 0, 38)
-	submitBtn.Position = UDim2.new(0.05, 0, 0, 216)
-	submitBtn.BackgroundColor3 = Color3.fromRGB(80, 140, 255)
-	submitBtn.Text = "Submit"
-	submitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	submitBtn.Font = Enum.Font.GothamBold
-	submitBtn.TextSize = 14
-	submitBtn.BorderSizePixel = 0
-	submitBtn.AutoButtonColor = true
-	submitBtn.Parent = main
-	Instance.new("UICorner", submitBtn).CornerRadius = UDim.new(0, 8)
-
-	local status = Instance.new("TextLabel")
-	status.Size = UDim2.new(0.9, 0, 0, 20)
-	status.Position = UDim2.new(0.05, 0, 0, 260)
-	status.BackgroundTransparency = 1
-	status.Text = ""
-	status.TextColor3 = Color3.fromRGB(255, 80, 80)
-	status.Font = Enum.Font.Gotham
-	status.TextSize = 12
-	status.Parent = main
-
-	linkBtn.MouseButton1Click:Connect(function()
-		copyToClipboard(KEY_SYSTEM_URL)
-		status.Text = "Link copied to clipboard!"
-		status.TextColor3 = Color3.fromRGB(80, 255, 120)
-	end)
-
-	local function verifyKey()
-		if keyInput.Text == BUILDHUB_KEY then
-			keyVerified = true
-			keyGui:Destroy()
-		else
-			status.Text = "Invalid key!"
-			status.TextColor3 = Color3.fromRGB(255, 80, 80)
-			keyInput.Text = ""
-		end
-	end
-
-	submitBtn.MouseButton1Click:Connect(verifyKey)
-	keyInput.FocusLost:Connect(function(enter)
-		if enter then verifyKey() end
-	end)
-
-	while not keyVerified do
-		task.wait(0.5)
-	end
-end
-
--- ==================== LOAD LUNA ====================
-local lunaSource = game:HttpGet("https://raw.githubusercontent.com/Nebula-Softworks/Luna-Interface-Suite/main/source.lua")
-lunaSource = lunaSource:gsub("local function BlurModule%(Frame%)", "local function BlurModule(Frame) do return end")
-local Luna = loadstring(lunaSource)()
+local WindUI = getgenv().WindUI
+local Window = getgenv().BuildHubWindow
 
 -- ==================== UTILS ====================
 local function getHumanoid()
@@ -363,7 +175,6 @@ local function espUpdateAll()
 	end
 end
 
--- ESP Scanner (background)
 task.spawn(function()
 	while true do
 		task.wait(0.3)
@@ -400,159 +211,173 @@ task.spawn(function()
 	end
 end)
 
--- ==================== LUNA GUI ====================
-local Window = Luna:CreateWindow({
-	Name = "BuildHub",
-	Subtitle = "by BuildHub",
-	LogoID = "6031097225",
-	LoadingEnabled = true,
-	LoadingTitle = "BuildHub",
-	LoadingSubtitle = "Loading...",
-	ConfigSettings = {
-		RootFolder = nil,
-		ConfigFolder = "BuildHubConfigs"
-	},
-	KeySystem = false,
+-- ==================== LOOTLABS API ====================
+local LOOTLABS_API_KEY = "8d9ae9c94aac0ab66b61d6983a4217e72da375f4ce0c1f13a083f90731f51429"
+
+local function createLootlabsLink(title, url, tierId, tasks, theme)
+	local ok, res = pcall(function()
+		return game:HttpGet(
+			"https://creators.lootlabs.gg/api/public/content_locker?api_token="
+			.. LOOTLABS_API_KEY
+			.. "&title=" .. HttpService:UrlEncode(title)
+			.. "&url=" .. HttpService:UrlEncode(url)
+			.. "&tier_id=" .. tostring(tierId)
+			.. "&number_of_tasks=" .. tostring(tasks)
+			.. "&theme=" .. tostring(theme or 1)
+		)
+	end)
+	if ok then
+		local ok2, data = pcall(function()
+			return HttpService:JSONDecode(res)
+		end)
+		if ok2 and (data.type == "created" or data.type == "fetch") and data.message and data.message.loot_url then
+			return data.message.loot_url
+		end
+	end
+	return nil
+end
+
+local function copyToClipboard(text)
+	pcall(function()
+		if setclipboard then
+			setclipboard(text)
+		elseif toclipboard then
+			toclipboard(text)
+		end
+	end)
+end
+
+-- ==================== WINDUI TABS ====================
+local PlayerTab = Window:Tab({
+	Title = "Player",
+	Icon = "lucide:footprints",
 })
 
-local PlayerTab = Window:CreateTab({
-	Name = "Player",
-	ShowTitle = true,
-	Icon = "directions_walk",
-	ImageSource = "Material"
+local VisualTab = Window:Tab({
+	Title = "Visual",
+	Icon = "lucide:eye",
 })
 
-local VisualTab = Window:CreateTab({
-	Name = "Visual",
-	ShowTitle = true,
-	Icon = "visibility",
-	ImageSource = "Material"
-})
-
-local MiscTab = Window:CreateTab({
-	Name = "Misc",
-	ShowTitle = true,
-	Icon = "settings",
-	ImageSource = "Material"
+local MiscTab = Window:Tab({
+	Title = "Misc",
+	Icon = "lucide:settings",
 })
 
 -- Player Tab
-PlayerTab:CreateSlider({
-	Name = "WalkSpeed",
-	Range = {0, 200},
-	Increment = 1,
-	CurrentValue = 16,
+PlayerTab:Slider({
+	Title = "WalkSpeed",
+	Value = {Min = 0, Max = 200, Default = 16},
+	Step = 1,
 	Callback = function(Value)
 		currentWalkSpeed = Value
 		applyHumanoid()
 	end
-}, "WalkSpeedSlider")
+})
 
-PlayerTab:CreateSlider({
-	Name = "JumpPower",
-	Range = {0, 200},
-	Increment = 1,
-	CurrentValue = 50,
+PlayerTab:Slider({
+	Title = "JumpPower",
+	Value = {Min = 0, Max = 200, Default = 50},
+	Step = 1,
 	Callback = function(Value)
 		currentJumpPower = Value
 		applyHumanoid()
 	end
-}, "JumpPowerSlider")
+})
 
-PlayerTab:CreateButton({
-	Name = "Reset WalkSpeed & JumpPower",
+PlayerTab:Button({
+	Title = "Reset WalkSpeed & JumpPower",
+	Icon = "lucide:rotate-ccw",
 	Callback = function()
 		currentWalkSpeed = 16
 		currentJumpPower = 50
 		applyHumanoid()
-		Luna:Notification({
+		WindUI:Notify({
 			Title = "Reset",
 			Content = "WalkSpeed: 16 | JumpPower: 50",
-			Icon = "refresh",
-			ImageSource = "Material"
+			Icon = "lucide:rotate-ccw",
+			Duration = 3
 		})
 	end
 })
 
 -- Visual Tab (ESP)
-VisualTab:CreateToggle({
-	Name = "ESP Master",
-	CurrentValue = false,
+VisualTab:Toggle({
+	Title = "ESP Master",
+	Value = false,
 	Callback = function(Value)
 		espEnabled = Value
 	end
-}, "ESPMaster")
+})
 
-VisualTab:CreateToggle({
-	Name = "Show Players",
-	CurrentValue = true,
+VisualTab:Toggle({
+	Title = "Show Players",
+	Value = true,
 	Callback = function(Value)
 		espPlayers = Value
 	end
-}, "ESPPlayers")
+})
 
-VisualTab:CreateToggle({
-	Name = "Show NPCs / Mobs",
-	CurrentValue = true,
+VisualTab:Toggle({
+	Title = "Show NPCs / Mobs",
+	Value = true,
 	Callback = function(Value)
 		espNPCs = Value
 	end
-}, "ESPNPCs")
+})
 
-VisualTab:CreateToggle({
-	Name = "Show Name",
-	CurrentValue = true,
+VisualTab:Toggle({
+	Title = "Show Name",
+	Value = true,
 	Callback = function(Value)
 		espShowName = Value
 	end
-}, "ESPShowName")
+})
 
-VisualTab:CreateToggle({
-	Name = "Show Health",
-	CurrentValue = false,
+VisualTab:Toggle({
+	Title = "Show Health",
+	Value = false,
 	Callback = function(Value)
 		espShowHealth = Value
 	end
-}, "ESPShowHealth")
+})
 
-VisualTab:CreateToggle({
-	Name = "Show Distance",
-	CurrentValue = true,
+VisualTab:Toggle({
+	Title = "Show Distance",
+	Value = true,
 	Callback = function(Value)
 		espShowDistance = Value
 	end
-}, "ESPShowDistance")
+})
 
-VisualTab:CreateSlider({
-	Name = "ESP Max Distance",
-	Range = {50, 5000},
-	Increment = 50,
-	CurrentValue = 500,
+VisualTab:Slider({
+	Title = "ESP Max Distance",
+	Value = {Min = 50, Max = 5000, Default = 500},
+	Step = 50,
 	Callback = function(Value)
 		espMaxDistance = Value
 	end
-}, "ESPMaxDistance")
+})
 
 -- Misc Tab
-MiscTab:CreateToggle({
-	Name = "Infinite Jump",
-	CurrentValue = false,
+MiscTab:Toggle({
+	Title = "Infinite Jump",
+	Value = false,
 	Callback = function(Value)
 		infJumpEnabled = Value
 	end
-}, "InfJumpToggle")
+})
 
-MiscTab:CreateToggle({
-	Name = "Noclip",
-	CurrentValue = false,
+MiscTab:Toggle({
+	Title = "Noclip",
+	Value = false,
 	Callback = function(Value)
 		noclipEnabled = Value
 	end
-}, "NoclipToggle")
+})
 
-MiscTab:CreateToggle({
-	Name = "Fly (WASD + Space / Shift)",
-	CurrentValue = false,
+MiscTab:Toggle({
+	Title = "Fly (WASD + Space / Shift)",
+	Value = false,
 	Callback = function(Value)
 		flyEnabled = Value
 		if flyEnabled then
@@ -561,57 +386,60 @@ MiscTab:CreateToggle({
 			stopFly()
 		end
 	end
-}, "FlyToggle")
+})
 
-MiscTab:CreateSlider({
-	Name = "Fly Speed",
-	Range = {1, 300},
-	Increment = 1,
-	CurrentValue = 50,
+MiscTab:Slider({
+	Title = "Fly Speed",
+	Value = {Min = 1, Max = 300, Default = 50},
+	Step = 1,
 	Callback = function(Value)
 		flySpeed = Value
 	end
-}, "FlySpeedSlider")
+})
 
--- LootLabs Link Creator
+MiscTab:Divider()
+
 local lootlabsDestInput = ""
 
-MiscTab:CreateInput({
-	Name = "LootLabs Destination URL",
-	PlaceholderText = "https://your-link-here.com",
-	RemoveTextAfterFocusLost = false,
+MiscTab:Section({Title = "LootLabs Link Creator"})
+
+MiscTab:Input({
+	Title = "Destination URL",
+	Placeholder = "https://your-link-here.com",
+	Value = "",
 	Callback = function(Text)
 		lootlabsDestInput = Text
 	end
-}, "LootlabsDestInput")
+})
 
-MiscTab:CreateButton({
-	Name = "Create LootLabs Link",
+MiscTab:Button({
+	Title = "Create LootLabs Link",
+	Icon = "lucide:link",
 	Callback = function()
 		if lootlabsDestInput and lootlabsDestInput ~= "" then
 			local link = createLootlabsLink("BuildHub", lootlabsDestInput, 3, 2, 3)
 			if link then
 				copyToClipboard(link)
-				Luna:Notification({
+				WindUI:Notify({
 					Title = "LootLabs",
 					Content = "Link created & copied: " .. link,
-					Icon = "link",
-					ImageSource = "Material"
+					Icon = "lucide:link",
+					Duration = 5
 				})
 			else
-				Luna:Notification({
+				WindUI:Notify({
 					Title = "LootLabs Error",
 					Content = "Failed to create link. Check API key and URL.",
-					Icon = "error",
-					ImageSource = "Material"
+					Icon = "lucide:alert-circle",
+					Duration = 5
 				})
 			end
 		else
-			Luna:Notification({
+			WindUI:Notify({
 				Title = "LootLabs",
 				Content = "Enter a destination URL first.",
-				Icon = "info",
-				ImageSource = "Material"
+				Icon = "lucide:info",
+				Duration = 3
 			})
 		end
 	end
@@ -686,9 +514,9 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 	end
 end)
 
-Luna:Notification({
+WindUI:Notify({
 	Title = "BuildHub Loaded",
-	Content = "Script initialized successfully. Press K to toggle UI.",
-	Icon = "check_circle",
-	ImageSource = "Material"
+	Content = "Script initialized successfully.",
+	Icon = "lucide:check-circle",
+	Duration = 5
 })
